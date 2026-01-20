@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\pagenumbering{gobble}
+\begin{document}
+\begin{center}
+{\LARGE \textbf{Co-60 Attenuation: What Changes When the Source Moves?}}\\[0.4em]
+{\large Hongyu Wang (UCSB Physics) \quad|\quad Instructor: W. Lippincott}
+\end{center}
+
+\vspace{0.6em}
+\textbf{The question.} If a radioactive source is moved by less than \SI{1}{cm}, how much extra shielding would you need to keep a radiation detector reading the \emph{same} value?
+
+\vspace{0.6em}
+\textbf{What we did.}
+\begin{itemize}[leftmargin=*]
+  \item Used a Co-60 source and a Geiger--M\"uller counter.
+  \item Inserted calibrated absorber stacks (reported as areal density $Z$ in \si{mg.cm^{-2}}).
+  \item Measured background-subtracted count rates $(N-B)$ for two source positions (Slot~3 and Slot~4).
+  \item Fit a line to $(N-B)$ vs $Z$ in the \emph{gamma-dominated} thickness range and inverted the fits.
+\end{itemize}
+
+\textbf{Key result (in plain terms).}
+Moving the source from Slot~4 to Slot~3 (a measured separation of \SI{0.876}{cm}) increases the detector's count rate enough that you need \emph{several grams per square centimeter} of extra shielding to compensate.
+For a typical operating point $(N-B)=130$ counts/min, the required increase is about
+\vspace{0.2em}
+\begin{center}
+\fbox{\Large $\Delta Z \approx \SI{7.5e3}{mg.cm^{-2}}$}
+\end{center}
+\vspace{0.2em}
+
+\textbf{Why this matters.}
+\begin{itemize}[leftmargin=*]
+  \item \emph{Geometry can mimic shielding.} A small distance change can look like a large shielding change.
+  \item \emph{Quality control and documentation.} In radiation measurements, you must record geometry (source position, detector position) to make results comparable across days or teams.
+  \item \emph{Transferable skill.} The workflow (data cleaning $\rightarrow$ uncertainty handling $\rightarrow$ regression $\rightarrow$ reproducible figures) mirrors how engineers validate sensors and track equipment performance.
+\end{itemize}
+
+\textbf{How to reproduce.} The GitHub repository contains the CSV data and a Python script that regenerates all figures and regression coefficients:
+\begin{center}
+\texttt{python src/analyze\_co60.py}
+\end{center}
+
+\end{document}

@@ -1,0 +1,16 @@
+Slot 3 fit: y = m x + b
+  m = -0.00856813 cpm/(mg/cm^2)
+  b = 263.00027 cpm
+  r = -0.876055, p = 0.000887
+
+Slot 4 fit: y = m x + b
+  m = -0.00595495 cpm/(mg/cm^2)
+  b = 177.94886 cpm
+  r = -0.907961, p = 0.000281
+
+ΔZ vs N−B (computed by inverting the two fits):
+  Fit: ΔZ = 51.22*(N−B) + 812.66  (mg/cm^2)
+  p = 1.2e-30
+
+Absorber-position one-way ANOVA on net count rate:
+  F = 0.368, p = 0.7
