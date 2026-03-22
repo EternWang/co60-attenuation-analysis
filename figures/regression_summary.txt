@@ -8,8 +8,8 @@ Slot 4 fit: y = m x + b
   b = 177.94886 cpm
   r = -0.907961, p = 0.000281
 
-ΔZ vs N−B (computed by inverting the two fits):
-  Fit: ΔZ = 51.22*(N−B) + 812.66  (mg/cm^2)
+Delta Z vs N-B (computed by inverting the two fits):
+  Fit: Delta Z = 51.22*(N-B) + 812.66  (mg/cm^2)
   p = 1.2e-30
 
 Absorber-position one-way ANOVA on net count rate:
