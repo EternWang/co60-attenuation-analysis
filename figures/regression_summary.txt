@@ -1,16 +1,19 @@
 Slot 3 fit: y = m x + b
-  m = -0.00856813 cpm/(mg/cm^2)
-  b = 263.00027 cpm
+  m = -0.00856813 +/- 0.00166743 cpm/(mg/cm^2)
+  b = 263.00027 +/- 12.09186 cpm
   r = -0.876055, p = 0.000887
 
 Slot 4 fit: y = m x + b
-  m = -0.00595495 cpm/(mg/cm^2)
-  b = 177.94886 cpm
+  m = -0.00595495 +/- 0.00097171 cpm/(mg/cm^2)
+  b = 177.94886 +/- 7.04667 cpm
   r = -0.907961, p = 0.000281
 
 Delta Z vs N-B (computed by inverting the two fits):
-  Fit: Delta Z = 51.22*(N-B) + 812.66  (mg/cm^2)
-  p = 1.2e-30
+  Deterministic fit: Delta Z = 51.22*(N-B) + 812.66  (mg/cm^2)
+  Propagated coefficient uncertainty: slope +/- 41.62, intercept +/- 7081.45
+  Uncertainty is propagated by Monte Carlo sampling of the Slot 3 and Slot 4 OLS coefficient covariance matrices.
+  At N-B = 130 cpm: Delta Z = 7471 +/- 2127 mg/cm^2
+  Deterministic linear summary p = 1.2e-30
 
 Absorber-position one-way ANOVA on net count rate:
   F = 0.368, p = 0.7

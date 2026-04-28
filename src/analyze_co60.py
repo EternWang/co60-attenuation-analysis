@@ -46,17 +46,55 @@ class FitResult:
     r_value: float
     p_value: float
     std_err: float
+    intercept_stderr: float
+    cov: np.ndarray
 
 
 def linear_fit(x: np.ndarray, y: np.ndarray) -> FitResult:
     res = stats.linregress(x, y)
+    _, cov = np.polyfit(x, y, deg=1, cov=True)
     return FitResult(
         slope=float(res.slope),
         intercept=float(res.intercept),
         r_value=float(res.rvalue),
         p_value=float(res.pvalue),
         std_err=float(res.stderr),
+        intercept_stderr=float(res.intercept_stderr),
+        cov=cov,
     )
+
+
+def propagate_delta_mapping(
+    fit3: FitResult,
+    fit4: FitResult,
+    *,
+    target_nb: float,
+    draws: int = 50_000,
+    seed: int = 20260429,
+) -> dict[str, float]:
+    """Propagate slot-fit uncertainty into the Delta Z mapping.
+
+    For a fitted line y = mZ + b, the inverted areal density is Z = (y - b) / m.
+    The derived mapping between target count rate and Delta Z is therefore linear for
+    any particular pair of slot-fit coefficients, but its slope and intercept inherit
+    uncertainty from both original regressions.
+    """
+    rng = np.random.default_rng(seed)
+    coef3 = rng.multivariate_normal([fit3.slope, fit3.intercept], fit3.cov, size=draws)
+    coef4 = rng.multivariate_normal([fit4.slope, fit4.intercept], fit4.cov, size=draws)
+
+    m3, b3 = coef3[:, 0], coef3[:, 1]
+    m4, b4 = coef4[:, 0], coef4[:, 1]
+    delta_slope = (1 / m3) - (1 / m4)
+    delta_intercept = (-b3 / m3) + (b4 / m4)
+    delta_at_target = delta_slope * target_nb + delta_intercept
+
+    return {
+        "slope_sd": float(np.std(delta_slope, ddof=1)),
+        "intercept_sd": float(np.std(delta_intercept, ddof=1)),
+        "target": float(target_nb),
+        "target_delta_sd": float(np.std(delta_at_target, ddof=1)),
+    }
 
 
 def set_plot_style() -> None:
@@ -146,6 +184,7 @@ def main() -> None:
     save_figure(fig1, FIG_DIR / "nb_vs_z_by_slot.png")
 
     fit_delta = linear_fit(nb_values, delta_z)
+    delta_unc = propagate_delta_mapping(fit3, fit4, target_nb=130.0)
 
     fig2 = plt.figure(figsize=(7.5, 4.6))
     ax2 = fig2.add_subplot(111)
@@ -202,18 +241,34 @@ def main() -> None:
 
     summary_lines: list[str] = []
     summary_lines.append("Slot 3 fit: y = m x + b\n")
-    summary_lines.append(f"  m = {fit3.slope:.8f} cpm/(mg/cm^2)\n")
-    summary_lines.append(f"  b = {fit3.intercept:.5f} cpm\n")
+    summary_lines.append(f"  m = {fit3.slope:.8f} +/- {fit3.std_err:.8f} cpm/(mg/cm^2)\n")
+    summary_lines.append(f"  b = {fit3.intercept:.5f} +/- {fit3.intercept_stderr:.5f} cpm\n")
     summary_lines.append(f"  r = {fit3.r_value:.6f}, p = {fit3.p_value:.3g}\n\n")
 
     summary_lines.append("Slot 4 fit: y = m x + b\n")
-    summary_lines.append(f"  m = {fit4.slope:.8f} cpm/(mg/cm^2)\n")
-    summary_lines.append(f"  b = {fit4.intercept:.5f} cpm\n")
+    summary_lines.append(f"  m = {fit4.slope:.8f} +/- {fit4.std_err:.8f} cpm/(mg/cm^2)\n")
+    summary_lines.append(f"  b = {fit4.intercept:.5f} +/- {fit4.intercept_stderr:.5f} cpm\n")
     summary_lines.append(f"  r = {fit4.r_value:.6f}, p = {fit4.p_value:.3g}\n\n")
 
     summary_lines.append("Delta Z vs N-B (computed by inverting the two fits):\n")
-    summary_lines.append(f"  Fit: Delta Z = {fit_delta.slope:.2f}*(N-B) + {fit_delta.intercept:.2f}  (mg/cm^2)\n")
-    summary_lines.append(f"  p = {fit_delta.p_value:.3g}\n\n")
+    summary_lines.append(
+        f"  Deterministic fit: Delta Z = {fit_delta.slope:.2f}*(N-B) + {fit_delta.intercept:.2f}"
+        "  (mg/cm^2)\n"
+    )
+    summary_lines.append(
+        f"  Propagated coefficient uncertainty: slope +/- {delta_unc['slope_sd']:.2f}, "
+        f"intercept +/- {delta_unc['intercept_sd']:.2f}\n"
+    )
+    summary_lines.append(
+        "  Uncertainty is propagated by Monte Carlo sampling of the Slot 3 and Slot 4 "
+        "OLS coefficient covariance matrices.\n"
+    )
+    summary_lines.append(
+        f"  At N-B = {delta_unc['target']:.0f} cpm: "
+        f"Delta Z = {fit_delta.slope * delta_unc['target'] + fit_delta.intercept:.0f} "
+        f"+/- {delta_unc['target_delta_sd']:.0f} mg/cm^2\n"
+    )
+    summary_lines.append(f"  Deterministic linear summary p = {fit_delta.p_value:.3g}\n\n")
 
     summary_lines.append("Absorber-position one-way ANOVA on net count rate:\n")
     summary_lines.append(f"  F = {f_stat:.3f}, p = {p_anova:.3g}\n")

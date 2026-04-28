@@ -5,9 +5,9 @@ This repository analyzes a Co-60 counting experiment with a Geiger-Muller detect
 ## Project Overview
 
 This project emphasizes transparent modeling choices: background subtraction, restricted
-fit ranges, regression inversion, a control test, and generated figures. I use it as a
-compact example of how quantitative assumptions can be documented so another reader can
-rerun the analysis and inspect where each number came from.
+fit ranges, regression inversion, a control test, and generated figures. It is organized
+as a compact empirical replication package so another reader can rerun the analysis and
+inspect where each reported number came from.
 
 ## At a Glance
 
@@ -35,6 +35,10 @@ For a target background-subtracted net count rate, how does the required absorbe
 
 ## Key figures
 
+**Co-60 decay scheme**
+
+<img src="assets/co60_decay_scheme.png" alt="Co-60 decay scheme" width="620">
+
 **Net count rate versus absorber thickness**
 
 <img src="figures/nb_vs_z_by_slot.png" alt="Net count rate versus absorber thickness" width="760">
@@ -49,12 +53,22 @@ For a target background-subtracted net count rate, how does the required absorbe
 
 ## Main quantitative results
 
-- Slot 3 fit: `(N - B) = -0.00857 * Z + 263.00`
-- Slot 4 fit: `(N - B) = -0.00595 * Z + 177.95`
-- Approximate mapping over the operating region:
-  `Delta Z ~= 51.38 * (N - B) + 781` `mg/cm^2`
-- At `N - B = 130 cpm`, moving from Slot 4 to Slot 3 requires about `7.46e3 mg/cm^2` of additional absorber.
-- One-way ANOVA for absorber position gives `p ~= 0.70`, so no statistically significant position effect was detected at fixed areal density.
+- Slot 3 fit: `(N - B) = (-0.00857 +/- 0.00167) * Z + (263.00 +/- 12.09)`
+- Slot 4 fit: `(N - B) = (-0.00595 +/- 0.00097) * Z + (177.95 +/- 7.05)`
+- Central mapping over the operating region:
+  `Delta Z ~= 51.22 * (N - B) + 812.66` `mg/cm^2`
+- Monte Carlo propagation of the two regression covariance matrices gives coefficient
+  uncertainties of about `+/- 41.62` on the slope and `+/- 7081.45 mg/cm^2` on the
+  intercept, so the derived mapping should be read as an uncertainty-aware operating
+  estimate rather than a high-precision calibration.
+- At `N - B = 130 cpm`, moving from Slot 4 to Slot 3 requires about `7.47e3 +/- 2.13e3 mg/cm^2` of additional absorber.
+
+## Control test
+
+The absorber-position test is a negative control: with total absorber thickness held
+fixed, the absorber slot itself should not change the net count rate. A one-way ANOVA
+on the repeated measurements gives `F = 0.368`, `p = 0.70`, so no detectable
+absorber-position effect was found at the fixed areal density used in the control run.
 
 ## Reproduce
 
@@ -64,7 +78,19 @@ pip install -r requirements.txt
 python src/analyze_co60.py
 ```
 
+If `make` is available:
+
+```bash
+make all
+```
+
 Outputs are written to `figures/`.
+
+Smoke test:
+
+```bash
+python -m unittest discover -s tests
+```
 
 ## Repository structure
 
@@ -81,3 +107,8 @@ assets/   Apparatus photo and decay scheme
 
 - Technical report: `report/report.pdf`
 - One-page summary: `summary/one_page_summary.pdf`
+
+## Attribution
+
+Author: Hongyu Wang.  
+Instructor: W. Lippincott, Department of Physics, UC Santa Barbara.
