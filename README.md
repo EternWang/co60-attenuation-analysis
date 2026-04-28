@@ -20,10 +20,6 @@ rerun the analysis and inspect where each number came from.
 The repository is intentionally small: the main figures, regression summary, and control
 test can be regenerated from the committed tables with one script.
 
-## Research snapshot
-
-<img src="figures/research_snapshot.png" alt="Co-60 attenuation research snapshot" width="860">
-
 ## Analysis question
 
 For a target background-subtracted net count rate, how does the required absorber areal density change when the source moves from one slot to another?
