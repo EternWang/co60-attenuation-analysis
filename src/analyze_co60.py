@@ -24,6 +24,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.patches import FancyBboxPatch
 from scipy import stats
 
 
@@ -82,6 +83,127 @@ def set_plot_style() -> None:
 def save_figure(fig: plt.Figure, path: Path) -> None:
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def draw_card(ax: plt.Axes, x: float, y: float, w: float, h: float, title: str, body: str, color: str) -> None:
+    box = FancyBboxPatch(
+        (x, y),
+        w,
+        h,
+        boxstyle="round,pad=0.018,rounding_size=0.025",
+        facecolor="white",
+        edgecolor="#CBD5E1",
+        linewidth=1.0,
+    )
+    ax.add_patch(box)
+    ax.text(x + 0.035, y + h - 0.07, title, ha="left", va="top", fontsize=11, weight="bold", color=color)
+    ax.text(x + 0.035, y + h - 0.145, body, ha="left", va="top", fontsize=9.3, color="#172033", linespacing=1.25)
+
+
+def plot_research_snapshot(
+    processed: pd.DataFrame,
+    fit3: FitResult,
+    fit4: FitResult,
+    fit_delta: FitResult,
+    p_anova: float,
+) -> None:
+    fig = plt.figure(figsize=(11.2, 5.5), facecolor="white")
+    grid = fig.add_gridspec(2, 3, height_ratios=[0.92, 1.08], width_ratios=[1.05, 1.0, 1.05])
+
+    ax_cards = fig.add_subplot(grid[0, :])
+    ax_cards.axis("off")
+    ax_cards.set_xlim(0, 1)
+    ax_cards.set_ylim(0, 1)
+    fig.suptitle("Co-60 attenuation analysis", x=0.04, y=0.985, ha="left", fontsize=17, weight="bold", color="#172033")
+    fig.text(
+        0.04,
+        0.925,
+        "Background-subtracted count-rate measurements with regression inversion and an absorber-position control test.",
+        ha="left",
+        fontsize=10.5,
+        color=GRAY,
+    )
+
+    draw_card(
+        ax_cards,
+        0.02,
+        0.08,
+        0.28,
+        0.68,
+        "Data inputs",
+        f"{len(processed)} processed count-rate rows\n"
+        f"{processed['source_position'].nunique()} source positions\n"
+        "absorber areal density metadata",
+        BLUE,
+    )
+    draw_card(
+        ax_cards,
+        0.36,
+        0.08,
+        0.28,
+        0.68,
+        "Regression model",
+        f"Slot 3 slope {fit3.slope:.4f}\n"
+        f"Slot 4 slope {fit4.slope:.4f}\n"
+        "fits inverted at fixed net count rate",
+        ORANGE,
+    )
+    draw_card(
+        ax_cards,
+        0.70,
+        0.08,
+        0.28,
+        0.68,
+        "Control check",
+        f"absorber-position ANOVA p = {p_anova:.2f}\n"
+        "no detectable position-only effect\n"
+        "summary file exported",
+        GREEN,
+    )
+
+    ax_scatter = fig.add_subplot(grid[1, :2])
+    palette = {"Slot 2": GRAY, "Slot 3": BLUE, "Slot 4": ORANGE}
+    for label, df in processed.groupby("source_position"):
+        ax_scatter.scatter(
+            df["Z_mg_per_cm2"],
+            df["net_count_rate_cpm"],
+            label=label,
+            color=palette.get(label, GRAY),
+            s=42,
+            edgecolor="white",
+            linewidth=0.6,
+        )
+    x_line = np.linspace(processed["Z_mg_per_cm2"].min() * 0.95, processed["Z_mg_per_cm2"].max() * 1.05, 200)
+    ax_scatter.plot(x_line, fit3.slope * x_line + fit3.intercept, color=BLUE, lw=2)
+    ax_scatter.plot(x_line, fit4.slope * x_line + fit4.intercept, color=ORANGE, lw=2)
+    ax_scatter.set_title("Background-subtracted attenuation curves", weight="bold", loc="left")
+    ax_scatter.set_xlabel("Absorber areal density Z (mg/cm^2)")
+    ax_scatter.set_ylabel("Net count rate N - B (counts/min)")
+    ax_scatter.legend(loc="upper right", ncol=3)
+
+    ax_delta = fig.add_subplot(grid[1, 2])
+    nb = np.array([110, 120, 130, 140, 150], dtype=float)
+    delta = fit_delta.slope * nb + fit_delta.intercept
+    ax_delta.plot(nb, delta / 1000, color=ORANGE, lw=2.2)
+    ax_delta.scatter(nb, delta / 1000, color=BLUE, s=45, edgecolor="white", linewidth=0.6, zorder=3)
+    ax_delta.set_title("Equivalent absorber change", weight="bold", loc="left")
+    ax_delta.set_xlabel("Target N - B (counts/min)")
+    ax_delta.set_ylabel("Delta Z (10^3 mg/cm^2)")
+    ax_delta.text(
+        0.05,
+        0.92,
+        f"Delta Z = {fit_delta.slope:.1f}(N-B) + {fit_delta.intercept:.0f}",
+        transform=ax_delta.transAxes,
+        ha="left",
+        va="top",
+        fontsize=9,
+        color=GRAY,
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": LIGHT, "edgecolor": "#CBD5E1"},
+    )
+
+    fig.tight_layout(rect=[0.03, 0.02, 0.99, 0.9])
+    fig.savefig(FIG_DIR / "research_snapshot.png", bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -199,6 +321,7 @@ def main() -> None:
         bbox={"boxstyle": "round,pad=0.35", "facecolor": LIGHT, "edgecolor": "#CBD5E1"},
     )
     save_figure(fig3, FIG_DIR / "absorber_position_net_rates.png")
+    plot_research_snapshot(processed, fit3, fit4, fit_delta, p_anova)
 
     summary_lines: list[str] = []
     summary_lines.append("Slot 3 fit: y = m x + b\n")

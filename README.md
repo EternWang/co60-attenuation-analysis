@@ -2,12 +2,12 @@
 
 This repository analyzes a Co-60 counting experiment with a Geiger-Muller detector. The central question is how much additional absorber thickness is required to keep the net count rate fixed when the source position changes.
 
-## What This Demonstrates
+## Project Overview
 
 This project emphasizes transparent modeling choices: background subtraction, restricted
 fit ranges, regression inversion, a control test, and generated figures. I use it as a
-compact example of how I document quantitative assumptions so that another researcher
-can rerun the analysis and inspect where each number came from.
+compact example of how quantitative assumptions can be documented so another reader can
+rerun the analysis and inspect where each number came from.
 
 ## At a Glance
 
@@ -17,8 +17,12 @@ can rerun the analysis and inspect where each number came from.
   inversion, and an explicit negative-control check.
 - **Reproducibility signal:** a short Python script rebuilds the figures and regression
   summary from the committed data tables.
-- **Transferable skill:** the project demonstrates defensible modeling choices, clear
-  assumptions, and robustness checks, all central to empirical research design.
+The repository is intentionally small: the main figures, regression summary, and control
+test can be regenerated from the committed tables with one script.
+
+## Research snapshot
+
+<img src="figures/research_snapshot.png" alt="Co-60 attenuation research snapshot" width="860">
 
 ## Analysis question
 
