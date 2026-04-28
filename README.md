@@ -17,6 +17,7 @@ rerun the analysis and inspect where each number came from.
   inversion, and an explicit negative-control check.
 - **Reproducibility signal:** a short Python script rebuilds the figures and regression
   summary from the committed data tables.
+
 The repository is intentionally small: the main figures, regression summary, and control
 test can be regenerated from the committed tables with one script.
 
