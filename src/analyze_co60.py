@@ -97,8 +97,11 @@ def draw_card(ax: plt.Axes, x: float, y: float, w: float, h: float, title: str, 
         linewidth=1.0,
     )
     ax.add_patch(box)
-    ax.text(x + 0.035, y + h - 0.07, title, ha="left", va="top", fontsize=11, weight="bold", color=color)
-    ax.text(x + 0.035, y + h - 0.145, body, ha="left", va="top", fontsize=9.3, color="#172033", linespacing=1.25)
+    title_y = y + h - 0.075 if body else y + h / 2
+    title_va = "top" if body else "center"
+    ax.text(x + 0.035, title_y, title, ha="left", va=title_va, fontsize=10.2, weight="bold", color=color)
+    if body:
+        ax.text(x + 0.035, y + h - 0.215, body, ha="left", va="top", fontsize=8.45, color="#172033", linespacing=1.18)
 
 
 def plot_research_snapshot(
@@ -134,7 +137,7 @@ def plot_research_snapshot(
         "Data inputs",
         f"{len(processed)} processed count-rate rows\n"
         f"{processed['source_position'].nunique()} source positions\n"
-        "absorber areal density metadata",
+        "areal-density metadata",
         BLUE,
     )
     draw_card(
@@ -146,7 +149,7 @@ def plot_research_snapshot(
         "Regression model",
         f"Slot 3 slope {fit3.slope:.4f}\n"
         f"Slot 4 slope {fit4.slope:.4f}\n"
-        "fits inverted at fixed net count rate",
+        "inverted at fixed count rate",
         ORANGE,
     )
     draw_card(
@@ -157,8 +160,8 @@ def plot_research_snapshot(
         0.68,
         "Control check",
         f"absorber-position ANOVA p = {p_anova:.2f}\n"
-        "no detectable position-only effect\n"
-        "summary file exported",
+        "no position-only effect\n"
+        "summary exported",
         GREEN,
     )
 
