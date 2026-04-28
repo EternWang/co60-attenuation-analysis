@@ -2,14 +2,14 @@
 
 This repository analyzes a Co-60 counting experiment with a Geiger-Muller detector. The central question is how much additional absorber thickness is required to keep the net count rate fixed when the source position changes.
 
-## Research Portfolio Signal
+## What This Demonstrates
 
 This project emphasizes transparent modeling choices: background subtraction, restricted
 fit ranges, regression inversion, a control test, and generated figures. I use it as a
 compact example of how I document quantitative assumptions so that another researcher
 can rerun the analysis and inspect where each number came from.
 
-## Reviewer Quick Scan
+## At a Glance
 
 - **Data workflow:** count-rate measurements, absorber metadata, and control-test data
   are turned into regression figures and a compact quantitative summary.
