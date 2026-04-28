@@ -31,6 +31,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
 FIG_DIR = REPO_ROOT / "figures"
 FIG_DIR.mkdir(exist_ok=True)
+BLUE = "#2F6B9A"
+ORANGE = "#D97935"
+GREEN = "#5B8C5A"
+RED = "#B4554B"
+GRAY = "#4A5568"
+LIGHT = "#EEF2F6"
 
 
 @dataclass(frozen=True)
@@ -53,7 +59,34 @@ def linear_fit(x: np.ndarray, y: np.ndarray) -> FitResult:
     )
 
 
+def set_plot_style() -> None:
+    plt.rcParams.update(
+        {
+            "figure.dpi": 140,
+            "savefig.dpi": 240,
+            "font.family": "DejaVu Sans",
+            "font.size": 10.5,
+            "axes.titlesize": 14,
+            "axes.labelsize": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.grid": True,
+            "grid.color": "#D9DEE7",
+            "grid.linewidth": 0.8,
+            "grid.alpha": 0.75,
+            "legend.frameon": False,
+        }
+    )
+
+
+def save_figure(fig: plt.Figure, path: Path) -> None:
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 def main() -> None:
+    set_plot_style()
     processed = pd.read_csv(DATA_DIR / "processed_points.csv")
 
     slot3 = processed.loc[processed["source_position"] == "Slot 3"].copy()
@@ -71,41 +104,68 @@ def main() -> None:
     z4 = inv_Z(fit4, nb_values)
     delta_z = z3 - z4
 
-    fig1 = plt.figure(figsize=(10, 6))
+    fig1 = plt.figure(figsize=(8.2, 5.0))
     ax1 = fig1.add_subplot(111)
 
-    for label, df in [("Slot 2", processed[processed["source_position"] == "Slot 2"]), ("Slot 3", slot3), ("Slot 4", slot4)]:
-        ax1.scatter(df["Z_mg_per_cm2"], df["net_count_rate_cpm"], label=label)
+    palette = {"Slot 2": GRAY, "Slot 3": BLUE, "Slot 4": ORANGE}
+    for label, df in [
+        ("Slot 2", processed[processed["source_position"] == "Slot 2"]),
+        ("Slot 3", slot3),
+        ("Slot 4", slot4),
+    ]:
+        ax1.scatter(
+            df["Z_mg_per_cm2"],
+            df["net_count_rate_cpm"],
+            label=label,
+            s=46,
+            color=palette[label],
+            edgecolor="white",
+            linewidth=0.6,
+            alpha=0.92,
+        )
 
     x_line = np.linspace(processed["Z_mg_per_cm2"].min() * 0.95, processed["Z_mg_per_cm2"].max() * 1.05, 200)
-    ax1.plot(x_line, fit3.slope * x_line + fit3.intercept, linestyle="--", label="Slot 3 fit")
-    ax1.plot(x_line, fit4.slope * x_line + fit4.intercept, linestyle="--", label="Slot 4 fit")
+    ax1.plot(x_line, fit3.slope * x_line + fit3.intercept, color=BLUE, lw=2.1, label="Slot 3 fit")
+    ax1.plot(x_line, fit4.slope * x_line + fit4.intercept, color=ORANGE, lw=2.1, label="Slot 4 fit")
 
-    ax1.set_title("Net count rate (N - B) vs absorber areal density")
+    ax1.set_title("Co-60 attenuation by source position")
     ax1.set_xlabel("Absorber areal density Z (mg/cm^2)")
-    ax1.set_ylabel("Net count rate (N - B) (counts/min)")
-    ax1.grid(True, alpha=0.3)
-    ax1.legend()
+    ax1.set_ylabel("Net count rate N - B (counts/min)")
+    ax1.text(
+        0.03,
+        0.06,
+        f"Slot 3: slope {fit3.slope:.4f} cpm/(mg/cm^2)\n"
+        f"Slot 4: slope {fit4.slope:.4f} cpm/(mg/cm^2)",
+        transform=ax1.transAxes,
+        ha="left",
+        va="bottom",
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": LIGHT, "edgecolor": "#CBD5E1"},
+    )
+    ax1.legend(ncol=2, loc="upper right")
 
-    fig1.tight_layout()
-    fig1.savefig(FIG_DIR / "nb_vs_z_by_slot.png", dpi=200)
-    plt.close(fig1)
+    save_figure(fig1, FIG_DIR / "nb_vs_z_by_slot.png")
 
     fit_delta = linear_fit(nb_values, delta_z)
 
-    fig2 = plt.figure(figsize=(8, 5))
+    fig2 = plt.figure(figsize=(7.5, 4.6))
     ax2 = fig2.add_subplot(111)
-    ax2.scatter(nb_values, delta_z, label="Computed Delta Z")
+    ax2.scatter(nb_values, delta_z, label="Computed from inverted fits", s=54, color=BLUE, edgecolor="white", linewidth=0.7)
     nb_line = np.linspace(nb_values.min() - 2, nb_values.max() + 2, 200)
-    ax2.plot(nb_line, fit_delta.slope * nb_line + fit_delta.intercept, linestyle="--", label="Linear fit")
-    ax2.set_title("Extra absorber thickness needed when moving source (Slot 4 -> Slot 3)")
-    ax2.set_xlabel("Target net count rate (N - B) (counts/min)")
-    ax2.set_ylabel("Delta Z (Slot 3 - Slot 4) (mg/cm^2)")
-    ax2.grid(True, alpha=0.3)
-    ax2.legend()
-    fig2.tight_layout()
-    fig2.savefig(FIG_DIR / "deltaZ_vs_nb.png", dpi=200)
-    plt.close(fig2)
+    ax2.plot(nb_line, fit_delta.slope * nb_line + fit_delta.intercept, color=ORANGE, lw=2.2, label="Linear summary")
+    ax2.set_title("Equivalent absorber change at fixed count rate")
+    ax2.set_xlabel("Target net count rate N - B (counts/min)")
+    ax2.set_ylabel("Delta Z, Slot 3 - Slot 4 (mg/cm^2)")
+    ax2.text(
+        0.03,
+        0.94,
+        f"Delta Z = {fit_delta.slope:.1f}(N-B) + {fit_delta.intercept:.0f}",
+        transform=ax2.transAxes,
+        ha="left",
+        va="top",
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": LIGHT, "edgecolor": "#CBD5E1"},
+    )
+    ax2.legend(loc="lower right")
+    save_figure(fig2, FIG_DIR / "deltaZ_vs_nb.png")
 
     raw = pd.read_csv(DATA_DIR / "raw_absorber_position_test.csv")
     groups = [
@@ -115,19 +175,30 @@ def main() -> None:
     ]
     f_stat, p_anova = stats.f_oneway(*groups)
 
-    fig3 = plt.figure(figsize=(8, 5))
+    fig3 = plt.figure(figsize=(7.0, 4.3))
     ax3 = fig3.add_subplot(111)
     order = ["Slot 1", "Slot 2", "Slot 3"]
     means = [raw.loc[raw["absorber_position"] == o, "net_count_rate_cpm"].mean() for o in order]
     sems = [raw.loc[raw["absorber_position"] == o, "net_count_rate_cpm"].sem() for o in order]
-    ax3.errorbar(order, means, yerr=sems, fmt="o", capsize=4)
-    ax3.set_title(f"Absorber position test (one-way ANOVA p = {p_anova:.3g})")
+    for idx, name in enumerate(order):
+        vals = raw.loc[raw["absorber_position"] == name, "net_count_rate_cpm"].to_numpy()
+        jitter = np.linspace(-0.055, 0.055, len(vals))
+        ax3.scatter(np.full_like(vals, idx, dtype=float) + jitter, vals, s=26, color="#94A3B8", alpha=0.75, zorder=2)
+    ax3.errorbar(range(len(order)), means, yerr=sems, fmt="o", color=BLUE, ecolor=BLUE, capsize=5, ms=7, zorder=3)
+    ax3.set_xticks(range(len(order)), order)
+    ax3.set_title("Negative control: absorber position")
     ax3.set_xlabel("Absorber position")
-    ax3.set_ylabel("Net count rate (N - B) (counts/min)")
-    ax3.grid(True, alpha=0.3)
-    fig3.tight_layout()
-    fig3.savefig(FIG_DIR / "absorber_position_net_rates.png", dpi=200)
-    plt.close(fig3)
+    ax3.set_ylabel("Net count rate N - B (counts/min)")
+    ax3.text(
+        0.03,
+        0.95,
+        f"One-way ANOVA p = {p_anova:.2f}\nNo detectable position effect",
+        transform=ax3.transAxes,
+        ha="left",
+        va="top",
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": LIGHT, "edgecolor": "#CBD5E1"},
+    )
+    save_figure(fig3, FIG_DIR / "absorber_position_net_rates.png")
 
     summary_lines: list[str] = []
     summary_lines.append("Slot 3 fit: y = m x + b\n")

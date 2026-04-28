@@ -36,15 +36,15 @@ For a target background-subtracted net count rate, how does the required absorbe
 
 **Net count rate versus absorber thickness**
 
-![N-B vs Z](figures/nb_vs_z_by_slot.png)
+<img src="figures/nb_vs_z_by_slot.png" alt="Net count rate versus absorber thickness" width="760">
 
 **Equivalent thickness change when moving the source**
 
-![Delta Z vs N-B](figures/deltaZ_vs_nb.png)
+<img src="figures/deltaZ_vs_nb.png" alt="Equivalent absorber thickness change" width="760">
 
 **Control test: absorber position**
 
-![Absorber position test](figures/absorber_position_net_rates.png)
+<img src="figures/absorber_position_net_rates.png" alt="Absorber position control test" width="760">
 
 ## Main quantitative results
 
