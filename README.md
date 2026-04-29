@@ -111,4 +111,6 @@ assets/   Apparatus photo and decay scheme
 ## Attribution
 
 Author: Hongyu Wang.  
+This is a solo analysis and report package: all analysis code, modeling decisions,
+figures, and write-up were completed by Hongyu Wang.  
 Instructor: W. Lippincott, Department of Physics, UC Santa Barbara.
